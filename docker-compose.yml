@@ -1,0 +1,45 @@
+version: '3.9'
+services:
+  api:
+    container_name: ATTT_backend
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - worker
+
+  db:
+    image: postgres
+    container_name: ATTT_db
+    volumes:
+      - db-data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+  redis:
+    image: redis
+    container_name: ATTT_redis
+    restart: always
+    volumes:
+      - redis-data:/data
+
+  worker:
+    build: .
+    container_name: ATTT_celery
+    command: celery -A core worker -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  db-data:
+  redis-data:
